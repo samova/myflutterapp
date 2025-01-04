@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mymoney/models/appnotifier.dart';
 import 'package:mymoney/models/enums.dart';
 import 'package:mymoney/models/record.dart';
+import 'package:provider/provider.dart';
 
 class RecordPage extends StatelessWidget {
   const RecordPage({super.key});
@@ -59,7 +60,7 @@ class _InputRecordViewState extends State<InputRecordView> {
             onPressed: () {
               AppNotifier().addRecord(RecordData(
                 catetype: DefaultTabController.of(context).index == 0 ? CategoryType.income.name : CategoryType.expenses.name,
-                category: _Controller.text,
+                category: context.watch().selectedCategory,
                 amount: int.parse(_amountController.text),
                 date: DateTime.now().toIso8601String(),
                 note: _noteController.text,
@@ -74,23 +75,39 @@ class _InputRecordViewState extends State<InputRecordView> {
   }
 }
 
-class CategoryGridView extends StatelessWidget {
+class CategoryGridView extends StatefulWidget {
   final String catetype;
   const CategoryGridView({super.key, required this.catetype});
 
   @override
+  State<CategoryGridView> createState() => _CategoryGridViewState();
+}
+
+class _CategoryGridViewState extends State<CategoryGridView> {
+  String? _selectedCategory;
+
+  @override
   Widget build(BuildContext context) {
     return GridView.count(
-      crossAxisCount: 2,
+      crossAxisCount: 3,
       children: AppNotifier().categories.map((category) {
-        return Card(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(category.icon, style: TextStyle(fontSize: 24)),
-              SizedBox(height: 8),
-              Text(category.category),
-            ],
+        final isSelected = _selectedCategory == category.category;
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedCategory = isSelected ? null : category.category;
+            });
+          },
+          child: Card(
+            color: isSelected ? Colors.blueAccent : Colors.white,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(category.icon, style: TextStyle(fontSize: 24)),
+                SizedBox(height: 8),
+                Text(category.category),
+              ],
+            ),
           ),
         );
       }).toList(),

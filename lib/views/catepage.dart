@@ -72,7 +72,7 @@ class _InputCateViewState extends State<InputCateView> {
             child: TextField(
               controller: _budgetController,
               decoration: InputDecoration(
-                hintText: 'Enter amount',
+                hintText: 'Enter budget',
               ),
             ),
           ),
