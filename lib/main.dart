@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:mymoney/data/datamanager.dart';
 import 'package:mymoney/models/appnotifier.dart';
+import 'package:mymoney/views/catepage.dart';
 import 'package:mymoney/views/home.dart';
+import 'package:mymoney/views/recordpage.dart';
 import 'package:provider/provider.dart';
 
-void main() async {
+Datamanager? dataManager;
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  dataManager = Datamanager();
+  dataManager?.initDatabase();
   runApp(const MyApp());
 }
 
@@ -23,17 +30,21 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
         ),
-          localizationsDelegates: [
-    GlobalMaterialLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-  ],
-  supportedLocales: [
-    Locale('en', 'us'), 
-    Locale('ja', 'japanese'), 
-    Locale('zh', 'chinese')
-  ],
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: [
+          Locale('en', 'US'),
+          Locale('ja', 'JP'),
+          Locale('zh', 'CN'),
+        ],
         home: MyHomePage(title: currentDate),
+        routes: {
+          '/catepage': (context) => const Catepage(),
+          '/recordpage': (context) => const RecordPage(),
+        },
       ),
     );
   }

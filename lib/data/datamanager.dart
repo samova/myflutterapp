@@ -4,51 +4,78 @@ import 'package:path/path.dart';
 class Datamanager {
   late Database db;
 
-  Datamanager() {
-    _initDatabase();
-  }
-
-  Future<void> _initDatabase() async {
+  Future<void> initDatabase() async {
     var databasesPath = await getDatabasesPath();
     String path = join(databasesPath, 'mymoney.db');
-    db = await openDatabase(path, version: 1,
-        onCreate: (Database db, int version) async {
-      await db.execute('''create table catemaster ( catetype text not null,category text not null,icon integer not null,budget integer not null,primary key (catetype, category))''');
-      await db.execute('''create table recorddata ( 
-        recordid text primary key, 
-        catetype text not null,
-        category text not null, 
-        amount integer not null, 
-        date text not null, 
-        note text not null)''');
-    });
+    db = await openDatabase(path, version: 3, 
+      onCreate: (Database db, int version) {
+        db.execute('''
+          CREATE TABLE catemaster (
+            cateid TEXT PRIMARY KEY,
+            catetype TEXT NOT NULL,
+            category TEXT NOT NULL,
+            icon TEXT NOT NULL,
+            budget INTEGER NOT NULL
+          )
+        ''');
+        db.execute('''
+          CREATE TABLE recorddata (
+            recordid TEXT PRIMARY KEY,
+            catetype TEXT NOT NULL,
+            category TEXT NOT NULL,
+            amount INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            note TEXT NOT NULL
+          )
+        ''');
+      },
+      onUpgrade: (Database db, int oldVersion, int newVersion){
+        if (oldVersion < newVersion) {
+          db.execute('DROP TABLE IF EXISTS catemaster');
+          db.execute('DROP TABLE IF EXISTS recorddata');
+          db.execute('''
+            CREATE TABLE catemaster (
+              cateid TEXT PRIMARY KEY,
+              catetype TEXT NOT NULL,
+              category TEXT NOT NULL,
+              icon TEXT NOT NULL,
+              budget INTEGER NOT NULL
+            )
+          ''');
+          db.execute('''
+            CREATE TABLE recorddata (
+              recordid TEXT PRIMARY KEY,
+              catetype TEXT NOT NULL,
+              category TEXT NOT NULL,
+              amount INTEGER NOT NULL,
+              date TEXT NOT NULL,
+              note TEXT NOT NULL
+            )
+          ''');
+        }
+      },
+    );
   }
 
   Future<int> addItem(String table, Map<String, dynamic> map) async {
-      return await db.insert(table, map);
+    return await db.insert(table, map);
   }
 
-  Future<List<Map>> getItems(String table, String catetype) async {
-    List<Map> maps = await db.query(table,
-        columns: ['*'],
-        where: 'catetype = ?',
-        whereArgs: [catetype]);
-    return maps;
+  Future<List<Map<String, dynamic>>> getItems(String table, String catetype) async {
+    return await db.query(table, where: 'catetype = ?', whereArgs: [catetype]);
   }
 
-  Future<List<Map>> getAllItems(String table) async {
-    List<Map> maps = await db.query(table,
-        columns: ['*']);
-    return maps;
+  Future<List<Map<String, dynamic>>> getAllItems(String table) async {
+    return await db.query(table);
   }
 
-  Future<int> deleteItem(String table, Map<String,dynamic> map) async {
+  Future<int> deleteItem(String table, Map<String, dynamic> map) async {
     String whereClause = map.keys.map((key) => '$key = ?').join(' AND ');
     List<dynamic> whereArgs = map.values.toList();
-    return await db.delete(table, 
-          where: whereClause,
-          whereArgs: whereArgs);
+    return await db.delete(table, where: whereClause, whereArgs: whereArgs);
   }
-  
-  Future close() async => db.close();
+
+  Future<void> close() async {
+    await db.close();
+  }
 }

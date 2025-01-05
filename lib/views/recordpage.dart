@@ -9,23 +9,27 @@ class RecordPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('RecordPage'),
-        bottom: TabBar(
-          tabs: [
-            Tab(icon: Icon(Icons.monetization_on_outlined), text: CategoryType.income.name),
-            Tab(icon: Icon(Icons.account_balance_wallet), text: CategoryType.expenses.name),
-          ],
+    return DefaultTabController(
+      initialIndex: 0,
+      length: 2, 
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('RecordPage'),
+          bottom: TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.monetization_on_outlined), text: CategoryType.income.name),
+              Tab(icon: Icon(Icons.account_balance_wallet), text: CategoryType.expenses.name),
+            ],
+          ),
         ),
-      ),
-      body: TabBarView(
-        children: [
+        body: TabBarView(
+          children: [
             CategoryGridView(catetype: CategoryType.income.name),
             CategoryGridView(catetype: CategoryType.expenses.name),
-        ],
-      ),
-      bottomNavigationBar: InputRecordView(),
+          ],
+        ),
+        bottomNavigationBar: InputRecordView(),
+      )
     );
   }
 }
@@ -55,18 +59,38 @@ class _InputRecordViewState extends State<InputRecordView> {
               ),
             ),
           ),
+          SizedBox(width: 20),
           IconButton(
             icon: Icon(Icons.add),
             onPressed: () {
-              AppNotifier().addRecord(RecordData(
-                catetype: DefaultTabController.of(context).index == 0 ? CategoryType.income.name : CategoryType.expenses.name,
-                category: context.watch().selectedCategory,
-                amount: int.parse(_amountController.text),
-                date: DateTime.now().toIso8601String(),
-                note: _noteController.text,
-              ));
-              _noteController.clear();
-              _amountController.clear();
+              final selectedCategory = context.read<AppNotifier>().selectedCategory;
+              if (selectedCategory != null) {
+                context.read<AppNotifier>().addRecord(RecordData(
+                  catetype: DefaultTabController.of(context).index == 0 ? CategoryType.income.name : CategoryType.expenses.name,
+                  category: selectedCategory,
+                  amount: int.parse(_amountController.text),
+                  date: DateTime.now().toIso8601String(),
+                  note: _noteController.text,
+                ));
+                _noteController.clear();
+                _amountController.clear();
+                Navigator.of(context).pop();
+              } else {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: Text('Please select a category'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text('OK'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              }
             },
           ),
         ],
@@ -84,19 +108,17 @@ class CategoryGridView extends StatefulWidget {
 }
 
 class _CategoryGridViewState extends State<CategoryGridView> {
-  String? _selectedCategory;
-
   @override
   Widget build(BuildContext context) {
+    final selectedCategory = context.watch<AppNotifier>().selectedCategory;
+
     return GridView.count(
-      crossAxisCount: 3,
-      children: AppNotifier().categories.map((category) {
-        final isSelected = _selectedCategory == category.category;
+      crossAxisCount: 6,
+      children: context.read<AppNotifier>().categories.map((category) {
+        final isSelected = selectedCategory == category.category;
         return GestureDetector(
           onTap: () {
-            setState(() {
-              _selectedCategory = isSelected ? null : category.category;
-            });
+            context.read<AppNotifier>().updateSelectedCategory(isSelected ? null : category.category);
           },
           child: Card(
             color: isSelected ? Colors.blueAccent : Colors.white,
