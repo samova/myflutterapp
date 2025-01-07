@@ -71,13 +71,13 @@ class _CategoryListViewState extends State<CategoryListView> {
     final appNotifier = context.watch<AppNotifier>();
     if (isFirstBuild) {
       appNotifier.loadCategories(widget.catetype);
-      isFirstBuild = false;
+      isFirstBuild = false; //to avoid the repeating of dataload
     }
     return ListView.builder(
       itemCount: appNotifier.categories.length,
       itemBuilder: (context, index) {
         return Dismissible(
-          key: UniqueKey(),
+          key: UniqueKey(),//to avoid error:A dismissed Dismissible widget is still part of the tree.
           direction: DismissDirection.endToStart,
           onDismissed: (direction) {
             appNotifier.deleteCategory(appNotifier.categories[index]);
