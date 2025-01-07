@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:mymoney/models/appnotifier.dart';
-import 'package:mymoney/models/category.dart';
 import 'package:mymoney/models/enums.dart';
+import 'package:mymoney/views/inputdialog.dart';
 import 'package:provider/provider.dart';
 
 class Catepage extends StatelessWidget {
@@ -42,7 +41,9 @@ class Catepage extends StatelessWidget {
                   builder: (context) {
                     return AlertDialog(
                       title: Text('Add $catetype Category'),
-                      content: InputDialog(catetype:catetype),
+                      content: InputDialog(cardMode: DefaultTabController.of(context).index == 0 
+                      ? CardMode.income 
+                      : CardMode.expenses),
                     );
                   },
                 );
@@ -71,13 +72,13 @@ class _CategoryListViewState extends State<CategoryListView> {
     final appNotifier = context.watch<AppNotifier>();
     if (isFirstBuild) {
       appNotifier.loadCategories(widget.catetype);
-      isFirstBuild = false; //to avoid the repeating of dataload
+      isFirstBuild = false;
     }
     return ListView.builder(
       itemCount: appNotifier.categories.length,
       itemBuilder: (context, index) {
         return Dismissible(
-          key: UniqueKey(),//to avoid error:A dismissed Dismissible widget is still part of the tree.
+          key: UniqueKey(),
           direction: DismissDirection.endToStart,
           onDismissed: (direction) {
             appNotifier.deleteCategory(appNotifier.categories[index]);
@@ -94,92 +95,26 @@ class _CategoryListViewState extends State<CategoryListView> {
           child: ListTile(
             leading: Text(appNotifier.categories[index].icon),
             title: Text(appNotifier.categories[index].category),
+            trailing: widget.catetype == CategoryType.expenses.name
+                ? Text('budget: ${appNotifier.categories[index].budget}')
+                : null,
+            onLongPress: () {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: Text('Edit Category'),
+                    content: InputDialog(
+                      cardMode: widget.catetype == CategoryType.income.name ? CardMode.income : CardMode.expenses,
+                      mapData: appNotifier.categories[index].toMap(),
+                    ),
+                  );
+                },
+              );
+            },
           ),
         );
       },
-    );
-  }
-}
-
-class InputDialog extends StatefulWidget {
-  final String catetype;
-  const InputDialog({super.key, required this.catetype});
-
-  @override
-  State<InputDialog> createState() => _InputDialogState();
-}
-
-class _InputDialogState extends State<InputDialog> {
-  final TextEditingController cateController = TextEditingController();
-  final TextEditingController budgetController = TextEditingController();
-  String selectedEmoji = '💰';
-
-  @override
-  Widget build(BuildContext context) {
-    final appNotifier = context.read<AppNotifier>();
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        DropdownButton<String>(
-          alignment: Alignment.center,
-          isExpanded: true,
-          value: selectedEmoji,
-          items: ['💰', '🤑', '🧧', '🪙', '🚗', '🏥', '🏡', '🚃', '🎡', '🏖️', '🎊', '🎁', '🛍️', '📱'].map((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value, style: TextStyle(fontSize: 24)),
-            );
-          }).toList(),
-          onChanged: (String? newValue) {
-            setState(() {
-              selectedEmoji = newValue!;
-            });
-          },
-        ),
-        SizedBox(height: 20),
-        TextField(
-          controller: cateController,
-          decoration: InputDecoration(
-            hintText: 'Enter category',
-          ),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^[a-zA-Z0-9\s\p{Emoji_Presentation}]*$')),
-          ],
-        ),
-        SizedBox(height: 20),
-        if (widget.catetype == CategoryType.expenses.name)
-          TextField(
-            controller: budgetController,
-            decoration: InputDecoration(
-              hintText: 'Enter budget',
-            ),
-            keyboardType: TextInputType.number,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-            ],
-          ),
-        SizedBox(height: 20),
-        TextButton(
-          child: Text('OK'),
-          onPressed: () {
-            if (cateController.text.isEmpty || (widget.catetype == CategoryType.expenses.name && budgetController.text.isEmpty)) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Please fill in all fields')),
-              );
-            } else {
-              appNotifier.addCategory(Category(
-                catetype: widget.catetype,
-                category: cateController.text,
-                budget: budgetController.text.isEmpty ? 0 : int.parse(budgetController.text),
-                icon: selectedEmoji,
-              ));
-              cateController.clear();
-              budgetController.clear();
-              Navigator.of(context).pop();
-            }
-          },
-        ),
-      ],
     );
   }
 }

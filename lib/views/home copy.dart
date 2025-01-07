@@ -5,15 +5,15 @@ import 'package:mymoney/views/inputdialog.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 
-class MyHomePage extends StatefulWidget {
+class MyHomePage2 extends StatefulWidget {
   final String title;
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage2({super.key, required this.title});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MyHomePage2> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage2> {
   DateTime _selectedDay = DateTime.now();
 
   @override
@@ -73,20 +73,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     title: Text(expenses[index].category),
                     subtitle: Text(expenses[index].note),
                     trailing: Text(expenses[index].amount.toString()),
-                    onLongPress: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: Text('Edit Expense'),
-                            content: InputDialog(
-                              cardMode: CardMode.record,
-                              mapData: expenses[index].toMap(),
-                            ),
-                          );
-                        },
-                      );
-                    },
                   ),
                 );
               },
