@@ -4,7 +4,6 @@ import 'package:mymoney/models/appnotifier.dart';
 import 'package:mymoney/views/catepage.dart';
 import 'package:mymoney/views/home.dart';
 import 'package:mymoney/views/iconpage.dart';
-import 'package:mymoney/views/splashpage.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -37,7 +36,6 @@ class MyApp extends StatelessWidget {
         ],
         home: MyHomePage(title: 'MyMoney'),
         routes: {
-          //'/home': (context) => const MyHomePage(title: 'MyMoney'),
           '/catepage': (context) => const Catepage(),
           '/iconpage': (context) => const IconPage(),
         },

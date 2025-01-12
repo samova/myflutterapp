@@ -16,40 +16,42 @@ class IconPage extends StatefulWidget {
 class _IconPageState extends State<IconPage> {
   List<EmojiIcon> emojiIcons = [];
   final TextEditingController textController = TextEditingController();
-  Set<EmojiIcon> selectedIcons = {};
+  Set<String> selectedIcons = {};
   bool _emojiShowing = false;
   
   @override
   Widget build(BuildContext context) {
     final appNotifier = context.watch<AppNotifier>();
     emojiIcons = appNotifier.emojiicons;
-
     return Scaffold(
       appBar: AppBar(title: Text('IconPage')),
       body: GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
+        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 80,
         ),
         itemCount: emojiIcons.length,
         itemBuilder: (context, index) {
           final icon = emojiIcons[index];
-          final isSelected = selectedIcons.contains(icon);
+          final isSelected = selectedIcons.contains(icon.icon);
           return GridTile(
-            header: Icon(Icons.check_circle, color: isSelected ? Colors.green : Colors.amber),
+            footer: Container(
+              alignment: Alignment.bottomRight,
+              child: Icon(Icons.check_circle, color: isSelected ? Colors.green : Colors.black45),
+            ),
             child: GestureDetector(
               onTap: () {
                 setState(() {
                   if (isSelected) {
-                    selectedIcons.remove(icon);
+                    selectedIcons.remove(icon.icon);
                   } else {
-                    selectedIcons.add(icon);
+                    selectedIcons.add(icon.icon);
                   }
                 });
               },
               child: Center(
                 child: Text(
                   icon.icon,
-                  style: TextStyle(fontSize: 24),
+                  style: TextStyle(fontSize: 38 * (foundation.defaultTargetPlatform == TargetPlatform.iOS ? 1.2 : 1.0)),
                 ),
               ),
             ),
@@ -85,8 +87,16 @@ class _IconPageState extends State<IconPage> {
                 child: Text('ADD'),
                 onPressed: () {
                   if (textController.text.isNotEmpty) {
-                    final newIcon = EmojiIcon(icon: textController.text);
-                    appNotifier.addEmojiIcon(newIcon);
+                    final newIcons = textController.text.characters.toSet().map((e) => EmojiIcon(icon: e)).toList();
+                    for (var newIcon in newIcons) {
+                      if (!emojiIcons.any((icon) => icon.icon == newIcon.icon)) {
+                        appNotifier.addEmojiIcon(newIcon);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('${newIcon.icon} is already exist')),
+                        );
+                      }
+                    }
                     textController.clear();
                   }
                 },
@@ -96,7 +106,7 @@ class _IconPageState extends State<IconPage> {
                 child: Text('DELETE'),
                 onPressed: () {
                   if (selectedIcons.isNotEmpty) {
-                    appNotifier.deleteEmojiIcons(selectedIcons.toList());
+                    appNotifier.deleteEmojiIcons(selectedIcons.map((icon) => EmojiIcon(icon: icon)).toList());
                     setState(() {
                       selectedIcons.clear();
                     });

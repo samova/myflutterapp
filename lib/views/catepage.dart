@@ -41,9 +41,7 @@ class Catepage extends StatelessWidget {
                   builder: (context) {
                     return AlertDialog(
                       title: Text('Add $catetype Category'),
-                      content: InputDialog(cardMode: DefaultTabController.of(context).index == 0 
-                      ? CardMode.income 
-                      : CardMode.expenses),
+                      content: InputDialog(cardMode: catetype == CategoryType.income.name ? CardMode.income : CardMode.expenses),
                     );
                   },
                 );
@@ -68,22 +66,28 @@ class _CategoryListViewState extends State<CategoryListView> {
   bool isFirstBuild = true;
 
   @override
+  void initState() {
+    super.initState();
+    final appNotifier = context.read<AppNotifier>();
+    appNotifier.loadCategories(widget.catetype);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final appNotifier = context.watch<AppNotifier>();
-    if (isFirstBuild) {
-      appNotifier.loadCategories(widget.catetype);
-      isFirstBuild = false;
-    }
+    final categories = appNotifier.categories;
     return ListView.builder(
-      itemCount: appNotifier.categories.length,
+      itemCount: categories.length,
       itemBuilder: (context, index) {
+        final category = categories[index];
         return Dismissible(
-          key: UniqueKey(),
+          key: ValueKey(category),
           direction: DismissDirection.endToStart,
           onDismissed: (direction) {
-            appNotifier.deleteCategory(appNotifier.categories[index]);
+            categories.remove(category);//Dismissible item must be removed immediately,otherwise will go error:'A dismissed Dismissible widget is still part of the tree.'
+            appNotifier.deleteCategory(category);
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('${appNotifier.categories[index].category} deleted')),
+              SnackBar(content: Text('${category.category} deleted')),
             );
           },
           background: Container(
@@ -93,25 +97,11 @@ class _CategoryListViewState extends State<CategoryListView> {
             child: Icon(Icons.delete, color: Colors.white),
           ),
           child: ListTile(
-            leading: Text(appNotifier.categories[index].icon),
-            title: Text(appNotifier.categories[index].category),
+            leading: Text(category.icon),
+            title: Text(category.category),
             trailing: widget.catetype == CategoryType.expenses.name
-                ? Text('budget: ${appNotifier.categories[index].budget}')
+                ? Text('budget: ${category.budget}')
                 : null,
-            onLongPress: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: Text('Edit Category'),
-                    content: InputDialog(
-                      cardMode: widget.catetype == CategoryType.income.name ? CardMode.income : CardMode.expenses,
-                      mapData: appNotifier.categories[index].toMap(),
-                    ),
-                  );
-                },
-              );
-            },
           ),
         );
       },

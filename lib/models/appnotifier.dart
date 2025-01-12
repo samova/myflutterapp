@@ -7,17 +7,10 @@ import 'package:mymoney/models/record.dart';
 class AppNotifier extends ChangeNotifier {
   List<Category> categories = [];
   List<RecordData> records = [];
-  List<EmojiIcon> emojiicons = [];
-  final String tableCategory = 'catemaster';
-  final String tableRecord = 'recorddata';
-  final String tableIcon = 'iconmaster';
-  String? _selectedCategory;
-  String? get selectedCategory => _selectedCategory;
-
-  void updateSelectedCategory(String? category) {
-    _selectedCategory = category;
-    notifyListeners();
-  }
+  List<EmojiIcon>  emojiicons = [];
+  static const String tableCategory = 'catemaster';
+  static const String tableRecord = 'recorddata';
+  static const String tableIcon = 'iconmaster';
 
   Future<void> loadEmojiIcons() async {
     final maps = await Datamanager.instance.getAllItems(tableIcon);
